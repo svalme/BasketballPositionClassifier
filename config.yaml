@@ -1,0 +1,28 @@
+environments:
+  dev:
+    output_files:
+      stats: "output/dev_output_stats.csv"
+      positions: "output/dev_output_positions.csv"
+    skipped_files:
+      stats: "output/dev_skipped_stats.csv"
+      positions: "output/dev_skipped_positions.csv"
+    logging:
+      file: "output/dev_fetch.log"
+      level: "DEBUG"
+    api:
+      sleep_delay: 0.1
+      max_retries: 2
+
+  prod:
+    output_files:
+      stats: "output/output_stats.csv"
+      positions: "output/output_positions.csv"
+    skipped_files:
+      stats: "output/skipped_stats.csv"
+      positions: "output/skipped_positions.csv"
+    logging:
+      file: "output/fetch.log"
+      level: "INFO"
+    api:
+      sleep_delay: 0.5
+      max_retries: 3
