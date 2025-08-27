@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.eggs/
+
+# Distribution / packaging
+dist/
+build/
+*.egg
+.tox/
+.venv/
+venv/
+env/
+
+# Tests
+.pytest_cache/
+.coverage
+
+# OS generated files
+.DS_Store
+.Trashes
+Thumbs.db
+
+# Logs
+output/
+
+# Virtual environment files
+# Specifically exclude virtual environments if they are created in the project root
+# and you don't want them tracked.
+# If you create virtual environments elsewhere, these lines might not be necessary.
+*/venv/
+*/env/
+
+# Miscellaneous
+*.bak
+*.swp
+*~
