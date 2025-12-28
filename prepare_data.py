@@ -1,77 +1,149 @@
 # prepare_data.py
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from pathlib import Path
 
-# ------------------------
-# 1. Load and Filter
-# ------------------------
-def load_data(csv_path: str) -> pd.DataFrame:
-    """Load raw NBA player stats from CSV."""
-    return pd.read_csv(csv_path)
+BASE_DIR = "data"
+SEASONS = ["2020_21", "2021_22", "2022_23", "2023_24", "2024_25"]
+LEAGUES = ["nba", "wnba"]
+
+DROP_COLUMNS = ["PLAYER_NAME", "TEAM_ID", "TEAM_ABBREVIATION"]
 
 
-def filter_players(df: pd.DataFrame) -> pd.DataFrame:
-    """Keep only players with games played > 0."""
-    return df[df['GP'] > 0].copy()
+def load_season_league(season, league):
+    """Load stats + positions for one league and season."""
+    season_dir = Path(BASE_DIR) / season
 
-# ------------------------
-# 2. Feature Engineering
-# ------------------------
-def add_per_game_stats(df: pd.DataFrame, stats: list) -> pd.DataFrame:
-    """Add per-game stats to dataframe."""
-    for stat in stats:
-        df[f'{stat}_PG'] = df[stat] / df['GP']
+    stats_path = season_dir / f"{league}_{season}_stats.csv"
+    pos_path = season_dir / f"{league}_{season}_positions.csv"
+
+    stats = pd.read_csv(stats_path)
+    pos = pd.read_csv(pos_path)
+
+    df = stats.merge(pos, on="PLAYER_ID", how="inner")
+    df["SEASON"] = season
+    df["LEAGUE"] = league
+
     return df
 
 
-def add_per36_stats(df: pd.DataFrame, stats: list) -> pd.DataFrame:
-    """Add per-36-minute stats to dataframe."""
-    for stat in stats:
-        df[f'{stat}_P36'] = df[stat] / df['MIN'] * 36
+def load_all_data():
+    """Load all seasons and leagues, skipping missing files."""
+    dfs = []
+    for season in SEASONS:
+        for league in LEAGUES:
+            try:
+                print(f"Loading {league.upper()} {season}")
+                dfs.append(load_season_league(season, league))
+            except FileNotFoundError as e:
+                print(f"     Skipped: {e}")
+            except Exception as e:
+                print(f"    Error loading {league.upper()} {season}: {e}")
+    
+    if not dfs:
+        raise ValueError("No data files found. Check your SEASONS and file paths.")
+    
+    return pd.concat(dfs, ignore_index=True)
+
+
+
+def add_features(df):
+    # remove players who didn't play
+    df = df[df["GP"] > 0].copy()
+
+    # per-game stats
+    for stat in ["PTS", "REB", "AST", "STL", "BLK"]:
+        df[f"{stat}_PG"] = df[stat] / df["GP"]
+
+    # per-36-minute stats
+    for stat in ["PTS", "REB", "AST", "STL", "BLK"]:
+        df[f"{stat}_P36"] = (df[stat] / df["MIN"]) * 36
+
+    # ratio features (with division by zero protection)
+    df["AST_TO_TOV"] = df["AST"] / (df["TOV"] + 1e-6)
+    df["FG3_RATE"] = df["FG3A"] / (df["FGA"] + 1e-6)  # avoid division by zero
+    df["FT_RATE"] = df["FTA"] / (df["FGA"] + 1e-6)  # avoid division by zero
+
     return df
 
 
-def prepare_for_ml(df: pd.DataFrame, stats: list) -> pd.DataFrame:
-    """Prepare dataframe with features and position labels for ML."""
-    # Round for readability
-    df = df.round(2)
 
-    # Columns: identifiers + raw efficiency + engineered
-    raw_efficiency = ["PLAYER_AGE", "FG_PCT", "FG3_PCT", "FT_PCT"]
-    feature_cols = raw_efficiency \
-                   + [f'{stat}_PG' for stat in stats] \
-                   + [f'{stat}_P36' for stat in stats]
+def normalize_position(pos):
+    """Convert detailed position into coarse class."""
+    if not isinstance(pos, str):
+        return None
+    pos = pos.strip()
+    if pos.startswith("G"):
+        return "G"
+    elif pos.startswith("F"):
+        return "F"
+    elif pos.startswith("C"):
+        return "C"
+    return None
 
-    ml_df = df[['PLAYER_ID', 'PLAYER', 'POSITION'] + feature_cols]
-    return ml_df
+FINE_POSITION_MAP = {
+    # guards
+    "G": "Guard",
+    "Guard": "Guard",
+    "G-F": "Guard-Forward",
+    "Guard-Forward": "Guard-Forward",
+
+    # forwards
+    "F": "Forward",
+    "Forward": "Forward",
+    "F-G": "Forward-Guard",
+    "Forward-Guard": "Forward-Guard",
+    "F-C": "Forward-Center",
+    "Forward-Center": "Forward-Center",
+
+    # centers
+    "C": "Center",
+    "Center": "Center",
+    "C-F": "Center-Forward",
+    "Center-Forward": "Center-Forward",
+}
+
+def normalize_fine_position(pos):
+    return FINE_POSITION_MAP.get(pos, None)
+
+def add_labels(df):
+    df = df.copy()  # ensure we're working with a copy, not a view
+    df["POSITION_FINE"] = df["POSITION"].apply(normalize_fine_position)
+    df = df.dropna(subset=["POSITION_FINE"]).copy()
+    df["POSITION_COARSE"] = df["POSITION"].apply(normalize_position)
+    df = df.dropna(subset=["POSITION_COARSE", "POSITION"]).copy()
+    return df
 
 
-def prepare_data(csv_path: str) -> pd.DataFrame:
-    """Full pipeline: load, filter, engineer features, return ML-ready dataframe."""
-    df = load_data(csv_path)
 
-    per_game_stats = [
-        'PTS','REB','AST','STL','BLK',
-        'TOV','PF','FGM','FGA','FG3M','FG3A','FTM','FTA','OREB','DREB'
-    ]
+def prepare_dataset():
+    df = load_all_data()
+    df = add_features(df)
+    df = add_labels(df)
 
-    df = filter_players(df)
-    df = add_per_game_stats(df, per_game_stats)
-    df = add_per36_stats(df, per_game_stats)
-    ml_df = prepare_for_ml(df, per_game_stats)
+    # drop unused columns
+    df = df.drop(columns=[c for c in DROP_COLUMNS if c in df.columns])
 
-    return ml_df
+    # fill any NaN values (from division by zero protection) with 0
+    df = df.fillna(0)
+    
+    # drop rows where position labels are None (invalid positions)
+    df = df[df["POSITION_COARSE"].notna()]
 
-def get_features_and_labels(csv_path: str, test_size: float = 0.2, random_state: int = 42):
-    """
-    Returns train-test split ready for ML:
-    X_train, X_test, y_train, y_test
-    """
-    df = prepare_data(csv_path)
+    return df
 
-    # Features = everything except identifiers + label
-    X = df.drop(columns=['PLAYER_ID', 'PLAYER', 'POSITION'])
-    y = df['POSITION']
 
-    return train_test_split(X, y, test_size=test_size, random_state=random_state)
+if __name__ == "__main__":
+    df = prepare_dataset()
+
+    print("Final dataset shape:", df.shape)
+    print("\nLabel distribution (coarse):")
+    print(df["POSITION_COARSE"].value_counts())
+
+    print("\nLabel distribution (fine):")
+    print(df["POSITION_FINE"].value_counts())
+
+    output_path = "data/final_dataset.csv"
+    df.to_csv(output_path, index=False)
+
+    print(f"\nSaved final dataset to {output_path}")
