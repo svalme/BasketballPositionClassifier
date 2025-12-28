@@ -1,4 +1,4 @@
-# BasketballPositionClassifier
+# Basketball Position Classifier
 
 This project builds a machine learning system to classify basketball player positions using multi-season WNBA and NBA performance data. Rather than relying on rigid position labels, the model learns positional roles directly from statistical profiles.
 
@@ -7,16 +7,16 @@ The system uses a hierarchical classification approach:
 - Stage 2: Once the coarse role is determined, the model routes the player to a specialized classifier trained only on that role.
 
 For example:
-    - If Stage 1 predicts Guard, the model then classifies among:
-        * Guard
-        * Guard-Forward
-    - If Stage 1 predicts Forward, the model chooses between:
-        * Forward
-        * Forward-Guard
-        * Forward-Center
-    - If Stage 1 predicts Center, the model chooses between:
-        * Center
-        * Center-Forward
+- If Stage 1 predicts Guard, the model then classifies among:
+    * Guard
+    * Guard-Forward
+- If Stage 1 predicts Forward, the model chooses between:
+    * Forward
+    * Forward-Guard
+    * Forward-Center
+- If Stage 1 predicts Center, the model chooses between:
+    * Center
+    * Center-Forward
 
 Each fine classifier only sees examples from its own group, which greatly reduces ambiguity. This design reflects the reality of modern basketball, where positional boundaries are fluid and role-based.
 
