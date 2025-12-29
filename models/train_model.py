@@ -134,7 +134,7 @@ def hierarchical_predict(X):
 
 final_preds = hierarchical_predict(x_test)
 
-print("\n=== FINAL 7-CLASS CLASSIFICATION REPORT ===")
+print("\n=== 7-CLASS CLASSIFICATION REPORT ===")
 print(classification_report(y_fine_test, final_preds))
 
 
@@ -144,6 +144,6 @@ cm = confusion_matrix(y_fine_test, final_preds, labels=labels)
 
 disp = ConfusionMatrixDisplay(cm, display_labels=labels)
 disp.plot(cmap="Blues", xticks_rotation=45)
-plt.title("Final 7-Class Confusion Matrix")
+plt.title("7-Class Confusion Matrix")
 plt.tight_layout()
 plt.show()

@@ -9,7 +9,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from prepare_data import (
+from data_prep.prepare_data import (
     normalize_position,
     normalize_fine_position,
     load_season_league,
@@ -267,7 +267,7 @@ class TestLoadSeasonLeague:
         tmpdir, season_dir = temp_season_dir
         
         # Temporarily change BASE_DIR
-        import prepare_data as prep_data
+        import data_prep.prepare_data as prep_data
         original_base = prep_data.BASE_DIR
         prep_data.BASE_DIR = tmpdir
         
@@ -289,7 +289,7 @@ class TestLoadSeasonLeague:
         """Test that merge happens on PLAYER_ID."""
         tmpdir, season_dir = temp_season_dir
         
-        import prepare_data as prep_data
+        import data_prep.prepare_data as prep_data
         original_base = prep_data.BASE_DIR
         prep_data.BASE_DIR = tmpdir
         
