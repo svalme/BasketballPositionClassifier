@@ -1,0 +1,106 @@
+
+=================================================================
+  DATASET OVERVIEW
+=================================================================
+  Total player-seasons : 2285
+  Train seasons        : 2020_21, 2021_22, 2022_23, 2023_24
+  Test season          : 2024_25
+  Train rows           : 1696
+  Test rows            : 589
+
+  NBA  rows :  1590  (69.6%)
+  WNBA rows :   695  (30.4%)
+
+=================================================================
+  COARSE POSITION DISTRIBUTION  (G / F / C)
+=================================================================
+  Position         Total  % total   Train    Test
+  -----------------------------------------------
+  Guard             1087    47.6%     810     277
+  Forward            876    38.3%     646     230
+  Center             322    14.1%     240      82
+
+=================================================================
+  FINE-GRAINED POSITION DISTRIBUTION
+=================================================================
+  Position             Total  % total   Train    Test  Note
+  ---------------------------------------------------------------
+  Guard                  928    40.6%     690     238  
+  Guard-Forward          159     7.0%     120      39  
+  Forward                658    28.8%     475     183  
+  Forward-Guard           74     3.2%      60      14   ← thin (<30 test examples)
+  Forward-Center         144     6.3%     111      33  
+  Center                 227     9.9%     165      62  
+  Center-Forward          95     4.2%      75      20   ← thin (<30 test examples)
+
+  Positions flagged 'thin' have fewer than 30 test examples.
+  F1 scores for these classes are less statistically reliable.
+  Collecting more data for hybrid roles would most improve the
+  fine-grained model.
+
+=================================================================
+  FINE-GRAINED DISTRIBUTION BY LEAGUE
+=================================================================
+
+  NBA  (1590 rows)
+  Position             Count       %
+  -----------------------------------
+  Guard                  611   38.4%
+  Guard-Forward          129    8.1%
+  Forward                440   27.7%
+  Forward-Guard           54    3.4%
+  Forward-Center         123    7.7%
+  Center                 153    9.6%
+  Center-Forward          80    5.0%
+
+  WNBA  (695 rows)
+  Position             Count       %
+  -----------------------------------
+  Guard                  317   45.6%
+  Guard-Forward           30    4.3%
+  Forward                218   31.4%
+  Forward-Guard           20    2.9%
+  Forward-Center          21    3.0%
+  Center                  74   10.6%
+  Center-Forward          15    2.2%
+
+=================================================================
+  ROWS PER SEASON AND LEAGUE
+=================================================================
+
+  LEAGUE   nba  wnba  TOTAL
+  SEASON                   
+  2020_21  214   137    351
+  2021_22  257   139    396
+  2022_23  310   138    448
+  2023_24  365   136    501
+  2024_25  444   145    589
+
+=================================================================
+  AGE BY COARSE POSITION
+=================================================================
+  Position         Mean   Median    Min    Max    Std
+  ------------------------------------------------
+  Guard            26.6     26.0     19     43    4.3
+  Forward          26.3     26.0     19     40    4.1
+  Center           26.6     26.0     19     39    4.1
+
+=================================================================
+  MEAN STAT PROFILES BY COARSE POSITION
+=================================================================
+
+  Stat               Guard   Forward    Center  Highest
+  -------------------------------------------------------
+  PTS                10.91     10.18      9.66  Guard
+  REB                 2.99      4.67      6.37  Center
+  AST                 3.02      1.91      1.56  Guard
+  BLK                 0.27      0.52      0.94  Center
+  STL                 0.83      0.71      0.59  Guard
+  FG3_PCT             0.35      0.30      0.19  Guard
+  FG_PCT              0.43      0.47      0.55  Center
+  AST_P36             4.40      2.83      2.41  Guard
+  BLK_P36             0.42      0.87      1.59  Center
+  REB_P36             4.63      7.62     10.64  Center
+
+  Read as: who has the highest average value for each stat.
+  FG3_PCT = 3-point %, FG_PCT = field goal %, AST_P36 = assists per 36 min.
