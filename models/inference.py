@@ -1,51 +1,55 @@
+import json
 import joblib
 import pandas as pd
+from pathlib import Path
 
-# --------------------------------------------------
-# Load models
-# --------------------------------------------------
+# ============================================================
+# PATHS
+# ============================================================
 
-COARSE_MODEL_PATH = "models/coarse_model.joblib"
-FINE_MODELS_PATH = "models/fine_models.joblib"
+ROOT = Path(__file__).parent.parent
+COARSE_MODEL_PATH = ROOT / "models" / "coarse_model.joblib"
+FINE_MODELS_PATH  = ROOT / "models" / "fine_models.joblib"
+FEATURES_PATH     = ROOT / "models" / "feature_columns.json"
+
+# ============================================================
+# Load models and feature list saved during training
+# ============================================================
 
 coarse_model = joblib.load(COARSE_MODEL_PATH)
-fine_models = joblib.load(FINE_MODELS_PATH)
+fine_models  = joblib.load(FINE_MODELS_PATH)
+
+with open(FEATURES_PATH) as f:
+    FEATURES = json.load(f)
 
 
-# --------------------------------------------------
-# Feature list (must match training)
-# --------------------------------------------------
-
-FEATURES = [
-    "PTS", "REB", "AST", "STL", "BLK",
-    "PTS_PG", "REB_PG", "AST_PG", "STL_PG", "BLK_PG",
-    "PTS_P36", "REB_P36", "AST_P36", "STL_P36", "BLK_P36",
-    "AST_TO_TOV", "FG3_RATE", "FT_RATE"
-]
-
-
-# --------------------------------------------------
+# ============================================================
 # Inference function
-# --------------------------------------------------
+# ============================================================
 
-def predict_position(player_stats: dict):
+def predict_position(player_stats: dict) -> dict:
     """
-    player_stats: dict with feature names as keys
-    """
+    Predict the coarse (G/F/C) and fine-grained position for a player.
 
+    Args:
+        player_stats: dict mapping feature names to values.
+                      Missing features default to 0; extra keys are ignored.
+
+    Returns:
+        dict with keys 'coarse_position' and 'fine_position'.
+    """
     df = pd.DataFrame([player_stats])
 
-    # Ensure correct feature order
-    X = df[FEATURES]
+    # Align to the exact feature columns seen during training;
+    # fill any missing columns with 0 rather than raising KeyError.
+    X = df.reindex(columns=FEATURES, fill_value=0)
 
-    # coarse prediction
     coarse_pred = coarse_model.predict(X)[0]
 
-    # fine prediction
     fine_model = fine_models[coarse_pred]
-    fine_pred = fine_model.predict(X)[0]
+    fine_pred  = fine_model.predict(X)[0]
 
     return {
         "coarse_position": coarse_pred,
-        "fine_position": fine_pred
+        "fine_position":   fine_pred,
     }

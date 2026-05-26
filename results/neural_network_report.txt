@@ -1,0 +1,13 @@
+=== NEURAL NETWORK — COARSE MODEL (G / F / C) ===
+
+Test season: 2024_25
+
+              precision    recall  f1-score   support
+
+           C       0.74      0.67      0.71        82
+           F       0.70      0.70      0.70       230
+           G       0.82      0.84      0.83       277
+
+    accuracy                           0.76       589
+   macro avg       0.75      0.74      0.74       589
+weighted avg       0.76      0.76      0.76       589

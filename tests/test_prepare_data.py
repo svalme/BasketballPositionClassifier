@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 import numpy as np
 import tempfile
-import os
 import sys
 from pathlib import Path
 
@@ -12,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data_prep.prepare_data import (
     normalize_position,
     normalize_fine_position,
-    load_season_league,
     add_features,
     add_labels,
 )
@@ -166,15 +164,22 @@ class TestAddFeatures:
         assert 'Player C' not in result['PLAYER_NAME'].values
 
     def test_adds_per_game_stats(self, sample_stats_df):
-        """Test that per-game stats are calculated correctly."""
+        """Test that per-game stats are aliases of the raw stats.
+
+        The API is called with per_mode_detailed='PerGame', so PTS, REB, etc.
+        are already per-game averages. _PG columns copy those values directly
+        rather than dividing by GP (which would be pts-per-game-per-game).
+        """
         result = add_features(sample_stats_df)
-        
+
         assert 'PTS_PG' in result.columns
         assert 'REB_PG' in result.columns
         assert 'AST_PG' in result.columns
-        
-        # Player A: 2000 PTS / 82 GP ≈ 24.39
-        assert abs(result.loc[0, 'PTS_PG'] - (2000 / 82)) < 0.01
+
+        # _PG should equal the raw stat (already per-game from the API)
+        assert result.loc[0, 'PTS_PG'] == result.loc[0, 'PTS']
+        assert result.loc[0, 'REB_PG'] == result.loc[0, 'REB']
+        assert result.loc[0, 'AST_PG'] == result.loc[0, 'AST']
 
     def test_adds_per36_stats(self, sample_stats_df):
         """Test that per-36-minute stats are calculated correctly."""
@@ -264,8 +269,8 @@ class TestAddLabels:
 class TestLoadSeasonLeague:
     def test_loads_stats_and_positions(self, temp_season_dir):
         """Test that stats and positions are loaded and merged."""
-        tmpdir, season_dir = temp_season_dir
-        
+        tmpdir, _ = temp_season_dir
+
         # Temporarily change BASE_DIR
         import data_prep.prepare_data as prep_data
         original_base = prep_data.BASE_DIR
@@ -287,8 +292,8 @@ class TestLoadSeasonLeague:
 
     def test_merges_on_player_id(self, temp_season_dir):
         """Test that merge happens on PLAYER_ID."""
-        tmpdir, season_dir = temp_season_dir
-        
+        tmpdir, _ = temp_season_dir
+
         import data_prep.prepare_data as prep_data
         original_base = prep_data.BASE_DIR
         prep_data.BASE_DIR = tmpdir
@@ -363,7 +368,7 @@ class TestDataFrameInspection:
         print(result[['PLAYER_ID', 'POSITION', 'POSITION_FINE', 'POSITION_COARSE']])
         print(f"\nShape: {result.shape}")
         print(f"\nPosition mapping:")
-        for idx, row in result.iterrows():
+        for _, row in result.iterrows():
             print(f"  Player {row['PLAYER_ID']}: {row['POSITION']} → FINE: {row['POSITION_FINE']}, COARSE: {row['POSITION_COARSE']}")
     
     def test_inspect_full_pipeline(self, sample_stats_df, sample_positions_df):

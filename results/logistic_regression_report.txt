@@ -1,0 +1,32 @@
+=== LOGISTIC REGRESSION — COARSE MODEL (G / F / C) ===
+
+Test season: 2024_25
+
+              precision    recall  f1-score   support
+
+           C       0.60      0.71      0.65        82
+           F       0.72      0.66      0.69       230
+           G       0.85      0.86      0.86       277
+
+    accuracy                           0.76       589
+   macro avg       0.72      0.74      0.73       589
+weighted avg       0.76      0.76      0.76       589
+
+
+=== LOGISTIC REGRESSION — 7-CLASS HIERARCHICAL MODEL ===
+
+Test season: 2024_25
+
+                precision    recall  f1-score   support
+
+        Center       0.62      0.52      0.56        62
+Center-Forward       0.18      0.40      0.25        20
+       Forward       0.68      0.49      0.57       183
+Forward-Center       0.23      0.27      0.25        33
+ Forward-Guard       0.17      0.50      0.26        14
+         Guard       0.81      0.76      0.79       238
+ Guard-Forward       0.20      0.28      0.23        39
+
+      accuracy                           0.58       589
+     macro avg       0.41      0.46      0.42       589
+  weighted avg       0.64      0.58      0.60       589

@@ -52,11 +52,12 @@ def add_features(df):
     # remove players who didn't play
     df = df[df["GP"] > 0].copy()
 
-    # per-game stats
+    # The API is called with per_mode_detailed="PerGame", so PTS, REB, etc.
+    # are already per-game averages. _PG columns are aliases kept for clarity.
     for stat in ["PTS", "REB", "AST", "STL", "BLK"]:
-        df[f"{stat}_PG"] = df[stat] / df["GP"]
+        df[f"{stat}_PG"] = df[stat]
 
-    # per-36-minute stats
+    # per-36-minute stats: (stat_per_game / min_per_game) * 36
     for stat in ["PTS", "REB", "AST", "STL", "BLK"]:
         df[f"{stat}_P36"] = (df[stat] / df["MIN"]) * 36
 
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     print("\nLabel distribution (fine):")
     print(df["POSITION_FINE"].value_counts())
 
-    output_path = "../data/final_dataset.csv"
+    output_path = Path(__file__).parent.parent / "data" / "final_dataset.csv"
     df.to_csv(output_path, index=False)
 
     print(f"\nSaved final dataset to {output_path}")
